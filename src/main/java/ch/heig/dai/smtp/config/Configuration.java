@@ -11,16 +11,41 @@ public class Configuration {
     File victims;
     File messages;
     int numberOfGroups;
+    String serverAddress;
+    int serverPort;
 
-    public Configuration(File victims, File messages, int numberOfGroups){
+    public Configuration(File victims, File messages, int numberOfGroups, String serverAddress, int serverPort){
         this.victims = victims;
         this.messages = messages;
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
         this.numberOfGroups = numberOfGroups;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
     }
 
+    public boolean verifyServerInfo(){
+        //Référence du regex utilisé pour vérifier l'adresse IP https://geeksforgeeks.org/how-to-validate-an-ip-address-using-regular-expressions-in-java/
+        String zeroTo255 = "(\\d{1,2}|(0|1)\\"
+                + "d{2}|2[0-4]\\d|25[0-5])";
+        String regex
+                = zeroTo255 + "\\."
+                + zeroTo255 + "\\."
+                + zeroTo255 + "\\."
+                + zeroTo255;
+
+        if(!Pattern.compile(regex).matcher(this.serverAddress).matches()){
+            return false;
+        }
+
+        return this.serverPort >= 1024 && this.serverPort <= 65535;
+    }
+
+    /**
+     * Fonction qui permet de lire le fichier des mails et de le séparer dans un tableau de String
+     * @return Un tableau de mail
+     */
     public String[] readVictims(){
         Charset charset = getEncoding(this.victims);
         String content;
@@ -31,6 +56,10 @@ public class Configuration {
         return null;
     }
 
+    /**
+     * Fonction qui permet de lire le fichier des messages et de le convertir en String
+     * @return Un tableau de message
+     */
     public String[] readMessages(){
         Charset charset = getEncoding(this.messages);
         String content;
@@ -41,7 +70,13 @@ public class Configuration {
         return null;
     }
 
+    /**
+     * Fonction qui vérifie grâce à un regex que le mail est valide
+     * @param emails
+     * @return "True" si les mails donnés en paramètre sont tous valides
+     */
     public boolean validateEmail(String[] emails){
+        //Référence du regex utilisé pour vérifier le mail : https://www.baeldung.com/java-email-validation-regex
         String regexPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         for(int i = 0; i < emails.length; i++) {
             if(!Pattern.compile(regexPattern).matcher(emails[i]).matches()){
@@ -51,6 +86,11 @@ public class Configuration {
          return true;
     }
 
+    /**
+     * Fonction qui permet de former les groupes de mail avec un nombre entre 2-5 mail pour chaque groupe
+     * @param group
+     * @return Un tableau de tableau de groupe de mail
+     */
     public String[][] formGroup(String[] group){
 
         String[][] str = new String[this.numberOfGroups][5];//5 est le nombre max de personne dans un groupe
@@ -70,6 +110,12 @@ public class Configuration {
         return str;
     }
 
+    /**
+     * Fonction qui ermet de lire un fichier
+     * @param file
+     * @param encoding
+     * @return le contenu du fichier
+     */
     private String readFile(File file, Charset encoding) {
         try(var reader = new BufferedReader(
                 new InputStreamReader(
@@ -87,6 +133,11 @@ public class Configuration {
         }
     }
 
+    /**
+     * Fonction qui permet d'obtenir le charset du fichier
+     * @param file
+     * @return le charset
+     */
     private Charset getEncoding(File file) {
 
         String f = file.getName();
