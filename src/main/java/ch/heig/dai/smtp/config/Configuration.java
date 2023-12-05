@@ -11,14 +11,35 @@ public class Configuration {
     File victims;
     File messages;
     int numberOfGroups;
+    String serverAddress;
+    int serverPort;
 
-    public Configuration(File victims, File messages, int numberOfGroups){
+    public Configuration(File victims, File messages, int numberOfGroups, String serverAddress, int serverPort){
         this.victims = victims;
         this.messages = messages;
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
         this.numberOfGroups = numberOfGroups;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+    }
+
+    public boolean verifyServerInfo(){
+        //Référence du regex utilisé pour vérifier l'adresse IP https://geeksforgeeks.org/how-to-validate-an-ip-address-using-regular-expressions-in-java/
+        String zeroTo255 = "(\\d{1,2}|(0|1)\\"
+                + "d{2}|2[0-4]\\d|25[0-5])";
+        String regex
+                = zeroTo255 + "\\."
+                + zeroTo255 + "\\."
+                + zeroTo255 + "\\."
+                + zeroTo255;
+
+        if(!Pattern.compile(regex).matcher(this.serverAddress).matches()){
+            return false;
+        }
+
+        return this.serverPort >= 1024 && this.serverPort <= 65535;
     }
 
     /**
@@ -55,7 +76,7 @@ public class Configuration {
      * @return "True" si les mails donnés en paramètre sont tous valides
      */
     public boolean validateEmail(String[] emails){
-        //Référence du regex pour vérifier le mail : https://www.baeldung.com/java-email-validation-regex
+        //Référence du regex utilisé pour vérifier le mail : https://www.baeldung.com/java-email-validation-regex
         String regexPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         for(int i = 0; i < emails.length; i++) {
             if(!Pattern.compile(regexPattern).matcher(emails[i]).matches()){
