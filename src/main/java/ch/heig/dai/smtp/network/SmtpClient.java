@@ -43,6 +43,7 @@ public class SmtpClient {
             // Set up input and output streams for communication with the server.
             input = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET));
             output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET));
+            LOG.info("Client: connection established");
         } catch (IOException e) {
             // Handle any exceptions that may occur during connection.
             System.out.println("Client: exc.: " + e);
@@ -57,8 +58,9 @@ public class SmtpClient {
      */
     private void sendRequest(String command) throws IOException {
         try {
-            output.write(command + "\n");
-            output.flush();            
+            output.write(command + "\r\n");
+            output.flush();
+            LOG.info("Client: " + command);
         } catch(IOException e){
             // Handle any exceptions that may occur during write.
             System.out.println("Client: exc.: " + e);
@@ -73,7 +75,7 @@ public class SmtpClient {
     private void readRequest() throws IOException {
         try {
             String msg = input.readLine();
-            LOG.info(msg);
+            LOG.info("Server: " + msg);
         } catch(IOException e){
             // Handle any exceptions that may occur during write.
             System.out.println("Client: exc.: " + e);
@@ -88,7 +90,7 @@ public class SmtpClient {
     private void readHeaderSmtp() throws IOException{
         String msg;
         while ((msg = input.readLine()) != null) {
-            LOG.info(msg);
+            LOG.info("Server: " + msg);
             if(!msg.startsWith("250")) {
                 throw new IOException("Smtp erro: " + msg);
             } else if (msg.contains("250 SMTPUTF8")) {
@@ -103,7 +105,6 @@ public class SmtpClient {
      * @throws IOException If an I/O error occurs while sending the email.
      */
     public void sendEmail() throws IOException{
-        LOG.info("Sending email with SMTP");
         openConnection();
         String info;
 
