@@ -23,7 +23,7 @@ public class App
         File victims = new File(args[0]);
         File messages = new File(args[1]);
         int nbrGroupe = Integer.parseInt(args[2]);
-        Configuration config = new Configuration(victims, messages, nbrGroupe);
+        Configuration config = new Configuration(victims, messages, nbrGroupe, serverAddress, serverPort);
         String[] strVictims = config.readVictims();
         String[] strMessages = config.readMessages();
 
