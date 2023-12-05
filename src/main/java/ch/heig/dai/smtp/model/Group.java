@@ -1,7 +1,11 @@
 package ch.heig.dai.smtp.model;
 
 import java.util.Random;
-
+/**
+ * Group class represents formation of groups.
+ * It creates groups of email and verify every group have at lease to email
+ * @author Kevin Auberson, Adrian Rogner
+ */
 public class Group {
     /**
      * Fonction qui permet de former les groupes de mail avec un nombre entre 2-5 mail pour chaque groupe
