@@ -11,16 +11,14 @@ public class Configuration {
     File victims;
     File messages;
     int numberOfGroups;
-    int nbrPeoplePerGroup;
 
-    Configuration(File victims, File messages, int numberOfGroups, int nbrPeoplePerGroup){
+    public Configuration(File victims, File messages, int numberOfGroups){
         this.victims = victims;
         this.messages = messages;
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
         this.numberOfGroups = numberOfGroups;
-        this.nbrPeoplePerGroup = nbrPeoplePerGroup;
     }
 
     public String[] readVictims(){
@@ -55,15 +53,18 @@ public class Configuration {
 
     public String[][] formGroup(String[] group){
 
-        String[][] str = new String[this.numberOfGroups][this.nbrPeoplePerGroup];
+        String[][] str = new String[this.numberOfGroups][5];//5 est le nombre max de personne dans un groupe
         int peopleInserted = 0;
         for(int i = 0; i < this.numberOfGroups; i++){
-            for(int j = 0; j < this.nbrPeoplePerGroup; j++){
+            //Génération d'un nombre entre 2 - 5 pour chaque groupe
+            Random rand = new Random();
+            int n = rand.nextInt(4);
+            n += 2;
+            for(int j = 0; j < n; j++){
                 if(group.length <= peopleInserted){
                     return str;
                 }
                 str[i][j] = group[peopleInserted++];
-
             }
         }
         return str;
