@@ -9,6 +9,7 @@ import java.io.ObjectInputFilter;
 public class App 
 {
     public static void main( String[] args ) throws IOException {
+
         String serverAddress = "localhost";
         int serverPort = 1025;
         if(args.length == 5){
@@ -57,5 +58,6 @@ public class App
 
         //SmtpClient client = new SmtpClient();
         //client.sendEmail();
+
     }
 }
