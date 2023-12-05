@@ -5,7 +5,7 @@ import java.io.IOException;
 public class App 
 {
     public static void main( String[] args ) throws IOException {
-        SmtpClient client = new SmtpClient();
+        SmtpClient client = new SmtpClient("localhost", 1025);
         client.sendEmail();
     }
 }
