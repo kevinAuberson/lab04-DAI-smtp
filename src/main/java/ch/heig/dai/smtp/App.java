@@ -28,7 +28,6 @@ public class App
         Configuration config = new Configuration(victims, messages, nbrGroupe, serverAddress, serverPort);
         String[] strVictims = config.readVictims();
         List<Message> messageList = config.readMessages();
-        
 
         String[][] groupeMail = config.formGroup(strVictims);
 
