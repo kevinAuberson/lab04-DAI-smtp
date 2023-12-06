@@ -4,34 +4,31 @@ import ch.heig.dai.smtp.model.Message;
 
 import java.io.*;
 import java.nio.charset.*;
-import java.sql.SQLData;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
 import ch.heig.dai.smtp.model.*;
 
 public class Configuration {
-    File victims;
-    File messages;
-
+    List<Group> group;
     List<Message> messagesList;
-    int numberOfGroups;
-    String serverAddress;
-    int serverPort;
+    final String serverAddress;
+    final int serverPort;
 
-    public Configuration(File victims, File messages, int numberOfGroups, String serverAddress, int serverPort){
-        this.victims = victims;
-        this.messages = messages;
+    public Configuration(File victims, File messages,int numberOfGroups, String serverAddress, int serverPort) throws IOException {
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
-        this.numberOfGroups = numberOfGroups;
+        if(!verifyServerInfo(serverAddress, serverPort)){
+            throw new IOException("Invalid server info");
+        }
+        this.messagesList = readMessages(messages);
+        this.group = formGroup(victims, numberOfGroups);
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
+        setEmaills();
     }
 
-    public boolean verifyServerInfo(){
+    private boolean verifyServerInfo(String serverAddress, int serverPort){
         //Référence du regex utilisé pour vérifier l'adresse IP https://geeksforgeeks.org/how-to-validate-an-ip-address-using-regular-expressions-in-java/
         String zeroTo255 = "(\\d{1,2}|(0|1)\\"
                 + "d{2}|2[0-4]\\d|25[0-5])";
@@ -41,39 +38,25 @@ public class Configuration {
                 + zeroTo255 + "\\."
                 + zeroTo255;
 
-        if(!Pattern.compile(regex).matcher(this.serverAddress).matches()){
+        if(!Pattern.compile(regex).matcher(serverAddress).matches()){
             return false;
         }
 
-        return this.serverPort >= 1024 && this.serverPort <= 65535;
-    }
-
-    /**
-     * Fonction qui permet de lire le fichier des mails et de le séparer dans un tableau de String
-     * @return Un tableau de mail
-     */
-    public String[] readVictims(){
-        Charset charset = getEncoding(this.victims);
-        String content;
-        if(charset != null) {
-            content = readFile(this.victims, charset);
-            return content.trim().split("\\s*,+\\s*,*\\s*"); // pour éviter les espaces
-        }
-        return null;
+        return serverPort >= 1024 && serverPort <= 65535;
     }
 
     /**
      * Fonction qui permet de lire le fichier des messages et de le convertir en String
      * @return Un tableau de message
      */
-    public List<Message> readMessages(){
-        Charset charset = getEncoding(this.messages);
+    private List<Message> readMessages(File messages){
+        Charset charset = getEncoding(messages);
         String content;
         messagesList = new ArrayList<>();
         if(charset != null) {
-            content = readFile(this.messages, charset);
+            content = readFile(messages, charset);
             for (String s : content.split("---")) {
-                messagesList.add(new Message(s.split("Subject:")[1].split("Body:")[0], s.split("Body:")[1]));
+                messagesList.add(new Message(s.split("Subject: ")[1].split("Body:")[0], s.split("Body:")[1]));
             }
         }else {
             throw new IllegalArgumentException("Charset null");
@@ -84,26 +67,54 @@ public class Configuration {
 
     /**
      * Fonction qui permet de former les groupes de mail avec un nombre entre 2-5 mail pour chaque groupe
-     * @param group
-     * @return Un tableau de tableau de groupe de mail
+     * @param victims
+     * @return Une liste de groupe de mail
      */
-    public String[][] formGroup(String[] group){
+    private List<Group> formGroup(File victims, int nbGroupe) throws IOException {
+        Charset charset = getEncoding(victims);
+        String content;
+        String [] str;
+        if(charset != null) {
+            content = readFile(victims, charset);
+            str = content.trim().split("\\s*,+\\s*,*\\s*"); // pour éviter les espaces
+        } else {
+            return null;
+        }
 
-        String[][] str = new String[this.numberOfGroups][5];//5 est le nombre max de personne dans un groupe
+        List<Group> groups = new ArrayList<>();
         int peopleInserted = 0;
-        for(int i = 0; i < this.numberOfGroups; i++){
+
+        for(int i = 0; i < nbGroupe; i++){
             //Génération d'un nombre entre 2 - 5 pour chaque groupe
             Random rand = new Random();
             int n = rand.nextInt(4);
             n += 2;
-            for(int j = 0; j < n; j++){
-                if(group.length <= peopleInserted){
-                    return str;
+            String[] recipients = new String[n - 1];
+
+            for(int j = 0; j < n; j++) {
+                if(!EmailValidation.isValid(str[i+j])){
+                    throw new IOException("Invalid email" + str[i+j]);
                 }
-                str[i][j] = group[peopleInserted++];
+                if (j == 0) {
+                    peopleInserted++;
+                } else {
+                    recipients[j - 1] = str[peopleInserted++];
+                }
             }
+
+            if(recipients.length < 1){
+                recipients[0] = str[0];
+            }
+            groups.add(new Group(str[n * i], recipients));
         }
-        return str;
+
+        return groups;
+    }
+
+    private void setEmaills(){
+        group.forEach(g -> {
+            g.setMessage(messagesList.get(new Random().nextInt(messagesList.size())));
+        });
     }
 
     /**

@@ -6,10 +6,9 @@ public class Group {
 
     private Message message;
 
-    public Group(String sender, String[] recipients, Message message){
+    public Group(String sender, String[] recipients){
         this.sender = sender;
         this.recipients = recipients;
-        this.message = message;
     }
 
     /**
@@ -37,5 +36,14 @@ public class Group {
      */
     public Message getMessage(){
         return this.message;
+    }
+
+    /**
+     * Sets the message of the group.
+     *
+     * @param message The message of the group.
+     */
+    public void setMessage(Message message){
+        this.message = message;
     }
 }
