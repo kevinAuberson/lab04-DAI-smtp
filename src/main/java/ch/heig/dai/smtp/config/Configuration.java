@@ -164,4 +164,16 @@ public class Configuration {
         }
         return null;
     }
+
+    public List<Group> getGroup() {
+        return group;
+    }
+
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
 }
