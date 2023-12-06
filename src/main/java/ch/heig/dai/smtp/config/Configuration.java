@@ -26,18 +26,24 @@ public class Configuration {
         setEmaills();
     }
 
+    /**
+     * Verify ip adresse and port number given are correct
+     * @param serverAddress
+     * @param serverPort
+     * @return true if information are correct
+     */
     private boolean verifyServerInfo(String serverAddress, int serverPort){
-        //Référence du regex utilisé pour vérifier l'adresse IP https://geeksforgeeks.org/how-to-validate-an-ip-address-using-regular-expressions-in-java/
-        String zeroTo255 = "(\\d{1,2}|(0|1)\\"
-                + "d{2}|2[0-4]\\d|25[0-5])";
-        String regex
-                = zeroTo255 + "\\."
-                + zeroTo255 + "\\."
-                + zeroTo255 + "\\."
-                + zeroTo255;
 
-        if(!Pattern.compile(regex).matcher(serverAddress).matches()){
+        String[] ip = serverAddress.trim().split("\\s*.+\\s*.*\\s*");
+
+        if(ip.length != 4){
             return false;
+        }
+
+        for (String s : ip) {
+            if (Integer.parseInt(s) < 0 || Integer.parseInt(s) > 255) {
+                return false;
+            }
         }
 
         return serverPort >= 1024 && serverPort <= 65535;
