@@ -1,15 +1,21 @@
 package ch.heig.dai.smtp.config;
 
+import ch.heig.dai.smtp.model.Message;
+
 import java.io.*;
 import java.nio.charset.*;
 import java.sql.SQLData;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
+import ch.heig.dai.smtp.model.*;
 
 public class Configuration {
     File victims;
     File messages;
+
+    List<Message> messagesList;
     int numberOfGroups;
     String serverAddress;
     int serverPort;
@@ -60,31 +66,21 @@ public class Configuration {
      * Fonction qui permet de lire le fichier des messages et de le convertir en String
      * @return Un tableau de message
      */
-    public String[] readMessages(){
+    public List<Message> readMessages(){
         Charset charset = getEncoding(this.messages);
         String content;
+        messagesList = new ArrayList<>();
         if(charset != null) {
             content = readFile(this.messages, charset);
-            return content.split("---");
-        }
-        return null;
-    }
-
-    /**
-     * Fonction qui vérifie grâce à un regex que le mail est valide
-     * @param emails
-     * @return "True" si les mails donnés en paramètre sont tous valides
-     */
-    public boolean validateEmail(String[] emails){
-        //Référence du regex utilisé pour vérifier le mail : https://www.baeldung.com/java-email-validation-regex
-        String regexPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-        for(int i = 0; i < emails.length; i++) {
-            if(!Pattern.compile(regexPattern).matcher(emails[i]).matches()){
-                return false;
+            for (String s : content.split("---")) {
+                messagesList.add(new Message(s.split("Subject:")[1].split("Body:")[0], s.split("Body:")[1]));
             }
+        }else {
+            throw new IllegalArgumentException("Charset null");
         }
-         return true;
+        return messagesList;
     }
+    
 
     /**
      * Fonction qui permet de former les groupes de mail avec un nombre entre 2-5 mail pour chaque groupe

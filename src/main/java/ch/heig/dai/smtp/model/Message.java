@@ -6,42 +6,18 @@ package ch.heig.dai.smtp.model;
  * @author Kevin Auberson, Adrian Rogner
  */
 public class Message {
-    private String from;
-    private String[] to;
     private String subject;
     private String body;
 
     /**
      * Constructor.
      *
-     * @param from The sender of the message.
-     * @param to The recipients of the message.
      * @param subject The subject of the message.
      * @param body The body of the message.
      */
-    public Message(String from, String[] to, String subject, String body){
-        this.from = from;
-        this.to = to;
+    public Message(String subject, String body){
         this.subject = subject;
         this.body = body;
-    }
-
-    /**
-     * Returns the sender of the message.
-     *
-     * @return The sender of the message.
-     */
-    public String getFrom(){
-        return this.from;
-    }
-
-    /**
-     * Returns the recipients of the message.
-     *
-     * @return The recipients of the message.
-     */
-    public String[] getTo(){
-        return this.to;
     }
 
     /**

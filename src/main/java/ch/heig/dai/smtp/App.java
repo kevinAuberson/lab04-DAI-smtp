@@ -1,10 +1,12 @@
 package ch.heig.dai.smtp;
 import ch.heig.dai.smtp.config.Configuration;
+import ch.heig.dai.smtp.model.Message;
 import ch.heig.dai.smtp.network.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputFilter;
+import java.util.List;
 
 public class App 
 {
@@ -25,11 +27,8 @@ public class App
         int nbrGroupe = Integer.parseInt(args[2]);
         Configuration config = new Configuration(victims, messages, nbrGroupe, serverAddress, serverPort);
         String[] strVictims = config.readVictims();
-        String[] strMessages = config.readMessages();
-
-        if(!config.validateEmail(strVictims)){
-            throw new IOException("Email invalide");
-        }
+        List<Message> messageList = config.readMessages();
+        
 
         String[][] groupeMail = config.formGroup(strVictims);
 
@@ -51,10 +50,6 @@ public class App
             }
         }
         System.out.println();
-
-        for (String strMessage : strMessages) {
-            System.out.println(strMessage);
-        }
 
         //SmtpClient client = new SmtpClient();
         //client.sendEmail();
