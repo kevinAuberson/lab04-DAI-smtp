@@ -18,9 +18,7 @@ public class Configuration {
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
-        if(!verifyServerInfo(serverAddress, serverPort)){
-            throw new IOException("Invalid server info");
-        }
+
         this.messagesList = readMessages(messages);
         this.group = formGroup(victims, numberOfGroups);
         this.serverAddress = serverAddress;
@@ -89,7 +87,7 @@ public class Configuration {
             Random rand = new Random();
             int n = rand.nextInt(4);
             n += 2;
-            String[] recipients = new String[n - 1];
+            List<String> recipients = new ArrayList<>(n-1);
 
             for(int j = 0; j < n; j++) {
                 if(!EmailValidation.isValid(str[i+j])){
@@ -98,12 +96,12 @@ public class Configuration {
                 if (j == 0) {
                     peopleInserted++;
                 } else {
-                    recipients[j - 1] = str[peopleInserted++];
+                    recipients.add(str[peopleInserted++]);
                 }
             }
 
-            if(recipients.length < 1){
-                recipients[0] = str[0];
+            if(recipients.size() < 1){
+                recipients.add(str[0]);
             }
             groups.add(new Group(str[n * i], recipients));
         }

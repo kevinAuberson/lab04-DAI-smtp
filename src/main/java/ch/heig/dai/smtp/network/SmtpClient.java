@@ -4,7 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.Base64;
+import ch.heig.dai.smtp.model.Group;
 
 /**
  * SmtpClient class represents a simple SMTP client to send emails.
@@ -12,6 +15,7 @@ import java.util.logging.Logger;
  */
 public class SmtpClient {
     private static final Logger LOG = Logger.getLogger(SmtpClient.class.getName());
+    private static final String CONTENT_TYPE = "Content-Transfer-Encoding: base64\r\n\r\n";
     private final String SERVER_ADDRESS;
     private final int SERVER_PORT;
     private Socket socket = null;
@@ -99,37 +103,63 @@ public class SmtpClient {
         }
     }
 
+    private StringBuilder buildContent(String sender, List<String> recipient, String subject, String body) {
+        StringBuilder content = new StringBuilder();
+        content.append("From: ").append(sender).append("\r\n");
+        content.append("To: ").append(String.join(",", recipient)).append("\r\n");
+        content.append("Subject:=?utf-8?B?").append(encodeBase64(subject)).append("?=\r\n");
+        content.append(CONTENT_TYPE);
+        content.append(encodeBase64(body)).append("\r\n\r\n");
+        content.append(".\r\n");
+        return content;
+    }
+
+    /**
+     * Encode une chaîne en base64.
+     *
+     * @param text La chaîne à encoder.
+     * @return La chaîne encodée.
+     */
+    public String encodeBase64(String text) {
+        return Base64.getEncoder().encodeToString(text.getBytes(CHARSET));
+    }
     /**
      * Sends an email using SMTP.
      *
      * @throws IOException If an I/O error occurs while sending the email.
      */
-    public void sendEmail() throws IOException{
-        openConnection();
-        String info;
+    public void sendEmail(List<Group> grp) throws IOException{
 
-        readRequest();
+        for (Group g:grp) {
+            openConnection();
+            String info;
 
-        sendRequest("EHLO localhost");
+            readRequest();
 
-        readHeaderSmtp();
+            sendRequest("EHLO " + SERVER_ADDRESS);
 
-        sendRequest("MAIL FROM:");
+            readHeaderSmtp();
 
-        readRequest();
+            sendRequest("MAIL FROM: <" + g.getSender() + ">");
 
-        sendRequest("RCPT TO:");
+            readRequest();
+            for (String r:g.getRecipients()) {
+                sendRequest("RCPT TO: <" + r + ">");
+            }
 
-        readRequest();
+            readRequest();
 
-        sendRequest("DATA");
+            sendRequest("DATA");
 
-        readRequest();
+            output.write(buildContent(g.getSender(), g.getRecipients(), g.getMessage().getSubject(), g.getMessage().getBody()).toString());
+            output.flush();
 
-        sendRequest("QUIT");
+            sendRequest("QUIT");
 
-        input.close();
-        output.close();
-        socket.close();
+            input.close();
+            output.close();
+            socket.close();
+        }
+
     }
 }
