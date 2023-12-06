@@ -2,13 +2,30 @@ package ch.heig.dai.smtp.model;
 
 import java.util.List;
 
+/**
+ * @author Kevin Auberson, Adrian Rogner
+ * @version 1.0
+ * @file Group.java
+ * @brief Represents a group with a sender, recipients, and a message.
+ * @date 2020-03-25
+ * <p>
+ * This class encapsulates information about a group, including its sender,
+ * recipients, and associated message. It allows for managing and accessing
+ * these details as a single entity.
+ * </p>
+ */
 public class Group {
-    private String sender;
-    private List<String> recipients;
-
+    private final String sender;
+    private final List<String> recipients;
     private Message message;
 
-    public Group(String sender, List<String> recipients){
+    /**
+     * Constructs a Group object with a sender and a list of recipients.
+     *
+     * @param sender     The sender of the group.
+     * @param recipients The recipients of the group.
+     */
+    public Group(String sender, List<String> recipients) {
         this.sender = sender;
         this.recipients = recipients;
     }
@@ -18,7 +35,7 @@ public class Group {
      *
      * @return The sender of the group.
      */
-    public String getSender(){
+    public String getSender() {
         return this.sender;
     }
 
@@ -27,7 +44,7 @@ public class Group {
      *
      * @return The recipients of the group.
      */
-    public List<String> getRecipients(){
+    public List<String> getRecipients() {
         return this.recipients;
     }
 
@@ -36,7 +53,7 @@ public class Group {
      *
      * @return The message of the group.
      */
-    public Message getMessage(){
+    public Message getMessage() {
         return this.message;
     }
 
@@ -45,7 +62,7 @@ public class Group {
      *
      * @param message The message of the group.
      */
-    public void setMessage(Message message){
+    public void setMessage(Message message) {
         this.message = message;
     }
 }

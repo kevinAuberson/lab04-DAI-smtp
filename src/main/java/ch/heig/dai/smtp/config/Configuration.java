@@ -1,44 +1,56 @@
 package ch.heig.dai.smtp.config;
 
 import ch.heig.dai.smtp.model.Message;
+import ch.heig.dai.smtp.model.*;
 
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
-import java.util.regex.*;
-import ch.heig.dai.smtp.model.*;
 
+/**
+ * @author Kevin Auberson, Adrian Rogner
+ * @version 1.0
+ * @file Configuration.java
+ * @brief Represents Configuration of what is sent by this application.
+ * @date 2020-03-25
+ * <p>
+ * This class represent the configuration of how the information is sent
+ * it uses the information given by the user to create groups and attribute
+ * to them the message which will be sent and verify server information
+ * </p>
+ */
 public class Configuration {
     List<Group> group;
     List<Message> messagesList;
     final String serverAddress;
     final int serverPort;
 
-    public Configuration(File victims, File messages,int numberOfGroups, String serverAddress, int serverPort) throws IOException {
-        if(numberOfGroups < 1){
+    public Configuration(File victims, File messages, int numberOfGroups, String serverAddress, int serverPort) throws IOException {
+        if (numberOfGroups < 1) {
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
-        if(!verifyServerInfo(serverAddress, serverPort)){
+        if (!verifyServerInfo(serverAddress, serverPort)) {
             throw new IllegalArgumentException("Server info incorrect");
         }
         this.messagesList = readMessages(messages);
         this.group = formGroup(victims, numberOfGroups);
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        setEmaills();
+        setEmails();
     }
 
     /**
-     * Verify ip adresse and port number given are correct
-     * @param serverAddress
-     * @param serverPort
+     * Verify ip address and port number given are correct
+     *
+     * @param serverAddress address of the server
+     * @param serverPort    port to connect on the server
      * @return true if information are correct
      */
-    private boolean verifyServerInfo(String serverAddress, int serverPort){
+    private boolean verifyServerInfo(String serverAddress, int serverPort) {
 
-        String[] ip = serverAddress.trim().split("\\s*.+\\s*.*\\s*");
+        String[] ip = serverAddress.split("\\.");
 
-        if(ip.length != 4){
+        if (ip.length != 4) {
             return false;
         }
 
@@ -52,37 +64,44 @@ public class Configuration {
     }
 
     /**
-     * Fonction qui permet de lire le fichier des messages et de le convertir en String
-     * @return Un tableau de message
+     * Read file that contains the messages and return a list of Message
+     *
+     * @return a list of Message
      */
-    private List<Message> readMessages(File messages){
+    private List<Message> readMessages(File messages) throws IOException {
         Charset charset = getEncoding(messages);
         String content;
         messagesList = new ArrayList<>();
-        if(charset != null) {
-            content = readFile(messages, charset);
+        if (charset != null) {
+            if((content = readFile(messages, charset)) == null){
+                throw new IOException("Content of file messages invalid");
+            }
+
             for (String s : content.split("---")) {
                 messagesList.add(new Message(s.split("Subject: ")[1].split("Body:")[0], s.split("Body:")[1]));
             }
-        }else {
+        } else {
             throw new IllegalArgumentException("Charset null");
         }
         return messagesList;
     }
-    
+
 
     /**
-     * Fonction qui permet de former les groupes de mail avec un nombre entre 2-5 mail pour chaque groupe
-     * @param victims
-     * @return Une liste de groupe de mail
+     * Form groups of 2-5 people containing a sender and recipients
+     *
+     * @param victims file containing list of emails
+     * @return list of group
      */
-    private List<Group> formGroup(File victims, int nbGroupe) throws IOException {
+    private List<Group> formGroup(File victims, int nbGroup) throws IOException {
         Charset charset = getEncoding(victims);
         String content;
-        String [] str;
-        if(charset != null) {
-            content = readFile(victims, charset);
-            str = content.trim().split("\\s*,+\\s*,*\\s*"); // pour éviter les espaces
+        String[] str;
+        if (charset != null) {
+            if((content = readFile(victims, charset)) == null){
+                throw new IOException("Content of file victims invalid");
+            }
+            str = content.trim().split("\\s*,+\\s*,*\\s*"); // To avoid spaces
         } else {
             return null;
         }
@@ -90,16 +109,16 @@ public class Configuration {
         List<Group> groups = new ArrayList<>();
         int peopleInserted = 0;
 
-        for(int i = 0; i < nbGroupe; i++){
-            //Génération d'un nombre entre 2 - 5 pour chaque groupe
+        for (int i = 0; i < nbGroup; i++) {
+            //generate a number between 2 and 5
             Random rand = new Random();
             int n = rand.nextInt(4);
             n += 2;
-            List<String> recipients = new ArrayList<>(n-1);
+            List<String> recipients = new ArrayList<>(n - 1);
 
-            for(int j = 0; j < n; j++) {
-                if(!EmailValidation.isValid(str[i+j])){
-                    throw new IOException("Invalid email" + str[i+j]);
+            for (int j = 0; j < n; j++) {
+                if (!EmailValidation.isValid(str[i + j])) {
+                    throw new IOException("Invalid email" + str[i + j]);
                 }
                 if (j == 0) {
                     peopleInserted++;
@@ -108,32 +127,38 @@ public class Configuration {
                 }
             }
 
-            if(recipients.size() < 1){
+            if (recipients.isEmpty()) {
                 recipients.add(str[0]);
             }
             groups.add(new Group(str[n * i], recipients));
+
+            if (str.length <= peopleInserted) {
+                break;
+            }
         }
 
         return groups;
     }
 
-    private void setEmaills(){
-        group.forEach(g -> {
-            g.setMessage(messagesList.get(new Random().nextInt(messagesList.size())));
-        });
+    /**
+     * Assign a message for every group created
+     */
+    private void setEmails() {
+        group.forEach(g -> g.setMessage(messagesList.get(new Random().nextInt(messagesList.size()))));
     }
 
     /**
-     * Fonction qui ermet de lire un fichier
-     * @param file
-     * @param encoding
-     * @return le contenu du fichier
+     * Reads and file and return its content
+     *
+     * @param file     file to read
+     * @param encoding charset of the file
+     * @return the content of the file
      */
     private String readFile(File file, Charset encoding) {
-        try(var reader = new BufferedReader(
+        try (var reader = new BufferedReader(
                 new InputStreamReader(
                         new FileInputStream(file),
-                        encoding));){
+                        encoding))) {
             StringBuilder stringbuilder = new StringBuilder();
             String sCurrentLine;
             while ((sCurrentLine = reader.readLine()) != null) {
@@ -141,22 +166,23 @@ public class Configuration {
             }
             reader.close();
             return stringbuilder.toString();
-        }catch(IOException e){
+        } catch (IOException e) {
             return null;
         }
     }
 
     /**
-     * Fonction qui permet d'obtenir le charset du fichier
-     * @param file
-     * @return le charset
+     * Get the charset of the file
+     *
+     * @param file file to obtain the charset
+     * @return the charset
      */
     private Charset getEncoding(File file) {
 
         String f = file.getName();
         String[] words = f.split("\\.");
 
-        if(words[words.length - 1] != null) {
+        if (words[words.length - 1] != null) {
             switch (words[words.length - 1]) {
                 case "utf8":
                     return StandardCharsets.UTF_8;
@@ -171,14 +197,29 @@ public class Configuration {
         return null;
     }
 
+    /**
+     * Returns the group
+     *
+     * @return the group
+     */
     public List<Group> getGroup() {
         return group;
     }
 
+    /**
+     * Returns the server address
+     *
+     * @return the server address
+     */
     public String getServerAddress() {
         return serverAddress;
     }
 
+    /**
+     * Returns the server port
+     *
+     * @return the server port
+     */
     public int getServerPort() {
         return serverPort;
     }

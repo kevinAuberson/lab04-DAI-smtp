@@ -2,16 +2,23 @@ package ch.heig.dai.smtp.network;
 
 import java.io.*;
 import java.net.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.*;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.Base64;
+
 import ch.heig.dai.smtp.model.Group;
 
 /**
- * SmtpClient class represents a simple SMTP client to send emails.
  * @author Kevin Auberson, Adrian Rogner
+ * @version 1.0
+ * @file SmtpClient.java
+ * @brief Represents a simple SMTP client to send emails.
+ * @date 2020-03-25
+ * <p>
+ * The SmtpClient class provides methods to establish a connection with an SMTP server
+ * and send emails to multiple recipients.
+ * </p>
  */
 public class SmtpClient {
     private static final Logger LOG = Logger.getLogger(SmtpClient.class.getName());
@@ -24,9 +31,9 @@ public class SmtpClient {
     private final Charset CHARSET = StandardCharsets.UTF_8;
 
     /**
-     * Constructor.
+     * Constructor to initialize SMTP client with server address and port.
      *
-     * @param ip The IP address of the SMTP server.
+     * @param ip   The IP address of the SMTP server.
      * @param port The port of the SMTP server.
      */
     public SmtpClient(String ip, int port) {
@@ -37,17 +44,39 @@ public class SmtpClient {
     /**
      * Opens a connection to the SMTP server.
      *
-     * @throws IOException If an I/O error occurs while opening the connection.
      */
-    private void openConnection() throws IOException {
+    private void openConnection() {
         try {
             // Create a socket to connect to the server at the specified address and port.
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-
+            LOG.info("Client: connection established");
             // Set up input and output streams for communication with the server.
             input = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET));
             output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET));
-            LOG.info("Client: connection established");
+
+            readRequest();
+
+            sendRequest("EHLO " + SERVER_ADDRESS);
+
+            readHeaderSmtp();
+
+        } catch (IOException e) {
+            // Handle any exceptions that may occur during connection.
+            System.out.println("Client: exc.: " + e);
+        }
+    }
+
+    /**
+     * Closes the connection to the SMTP server.
+     *
+     */
+    private void closeConnection() {
+        try {
+            sendRequest("QUIT");
+            input.close();
+            output.close();
+            socket.close();
+            LOG.info("Client: connection closed");
         } catch (IOException e) {
             // Handle any exceptions that may occur during connection.
             System.out.println("Client: exc.: " + e);
@@ -65,7 +94,7 @@ public class SmtpClient {
             output.write(command + "\r\n");
             output.flush();
             LOG.info("Client: " + command);
-        } catch(IOException e){
+        } catch (IOException e) {
             // Handle any exceptions that may occur during write.
             System.out.println("Client: exc.: " + e);
         }
@@ -80,7 +109,7 @@ public class SmtpClient {
         try {
             String msg = input.readLine();
             LOG.info("Server: " + msg);
-        } catch(IOException e){
+        } catch (IOException e) {
             // Handle any exceptions that may occur during write.
             System.out.println("Client: exc.: " + e);
         }
@@ -91,11 +120,11 @@ public class SmtpClient {
      *
      * @throws IOException If an I/O error occurs while reading the header.
      */
-    private void readHeaderSmtp() throws IOException{
+    private void readHeaderSmtp() throws IOException {
         String msg;
         while ((msg = input.readLine()) != null) {
             LOG.info("Server: " + msg);
-            if(!msg.startsWith("250")) {
+            if (!msg.startsWith("250")) {
                 throw new IOException("Smtp erro: " + msg);
             } else if (msg.contains("250 SMTPUTF8")) {
                 break;
@@ -115,51 +144,47 @@ public class SmtpClient {
     }
 
     /**
-     * Encode une chaîne en base64.
+     * Encodes a string in base64.
      *
-     * @param text La chaîne à encoder.
-     * @return La chaîne encodée.
+     * @param text The string to encode.
+     * @return The encoded string.
      */
     public String encodeBase64(String text) {
         return Base64.getEncoder().encodeToString(text.getBytes(CHARSET));
     }
+
     /**
-     * Sends an email using SMTP.
+     * Sends emails using SMTP to the specified groups.
      *
-     * @throws IOException If an I/O error occurs while sending the email.
+     * @param grp List of groups to send emails.
+     * @throws IOException If an I/O error occurs while sending emails.
      */
-    public void sendEmail(List<Group> grp) throws IOException{
+    public void sendEmail(List<Group> grp) throws IOException {
+        openConnection();
+        try {
+            for (Group g : grp) {
 
-        for (Group g:grp) {
-            openConnection();
-            String info;
+                sendRequest("MAIL FROM: <" + g.getSender() + ">");
 
-            readRequest();
+                readRequest();
 
-            sendRequest("EHLO " + SERVER_ADDRESS);
+                for (String r : g.getRecipients()) {
+                    sendRequest("RCPT TO: <" + r + ">");
+                }
 
-            readHeaderSmtp();
+                readRequest();
 
-            sendRequest("MAIL FROM: <" + g.getSender() + ">");
+                sendRequest("DATA");
 
-            readRequest();
-            for (String r:g.getRecipients()) {
-                sendRequest("RCPT TO: <" + r + ">");
+                output.write(buildContent(g.getSender(), g.getRecipients(), g.getMessage().getSubject(), g.getMessage().getBody()).toString());
+                output.flush();
+
+                LOG.info("Client: DATA SENT");
+
+                //TODO: check if the message is sent
             }
-
-            readRequest();
-
-            sendRequest("DATA");
-
-            output.write(buildContent(g.getSender(), g.getRecipients(), g.getMessage().getSubject(), g.getMessage().getBody()).toString());
-            output.flush();
-
-            sendRequest("QUIT");
-
-            input.close();
-            output.close();
-            socket.close();
+        } finally {
+            closeConnection();
         }
-
     }
 }

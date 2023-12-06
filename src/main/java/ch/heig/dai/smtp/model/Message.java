@@ -1,21 +1,27 @@
 package ch.heig.dai.smtp.model;
 
 /**
- * Message class represents an email message.
- * It contains the sender, the recipients, the subject and the body of the message.
  * @author Kevin Auberson, Adrian Rogner
+ * @version 1.0
+ * @file Message.java
+ * @brief Represents an email message.
+ * @date 2020-03-25
+ * <p>
+ * The Message class contains information about an email message, including
+ * its sender, recipients, subject, and body.
+ * </p>
  */
 public class Message {
-    private String subject;
-    private String body;
+    private final String subject;
+    private final String body;
 
     /**
-     * Constructor.
+     * Constructor for creating a Message object.
      *
      * @param subject The subject of the message.
-     * @param body The body of the message.
+     * @param body    The body of the message.
      */
-    public Message(String subject, String body){
+    public Message(String subject, String body) {
         this.subject = subject;
         this.body = body;
     }
@@ -25,7 +31,7 @@ public class Message {
      *
      * @return The subject of the message.
      */
-    public String getSubject(){
+    public String getSubject() {
         return this.subject;
     }
 
@@ -34,7 +40,7 @@ public class Message {
      *
      * @return The body of the message.
      */
-    public String getBody(){
+    public String getBody() {
         return this.body;
     }
 }
