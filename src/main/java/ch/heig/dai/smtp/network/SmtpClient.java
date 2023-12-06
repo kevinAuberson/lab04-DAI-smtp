@@ -43,7 +43,6 @@ public class SmtpClient {
 
     /**
      * Opens a connection to the SMTP server.
-     *
      */
     private void openConnection() {
         try {
@@ -68,11 +67,11 @@ public class SmtpClient {
 
     /**
      * Closes the connection to the SMTP server.
-     *
      */
     private void closeConnection() {
         try {
             sendRequest("QUIT");
+            readRequest(); //221 Bye
             input.close();
             output.close();
             socket.close();
@@ -132,6 +131,30 @@ public class SmtpClient {
         }
     }
 
+    /**
+     * Reads the end data response.
+     *
+     * @throws IOException If an I/O error occurs while reading the end data response.
+     */
+    private void readEndData() throws IOException {
+        String validateData;
+        while ((validateData = input.readLine()) != null) {
+            LOG.info("Server: " + validateData);
+            if (validateData.contains("250 Message queued")) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Builds the content of the email to be sent.
+     *
+     * @param sender   The sender of the email.
+     * @param recipient The list of recipients of the email.
+     * @param subject  The subject of the email.
+     * @param body     The body of the email.
+     * @return The built content of the email.
+     */
     private StringBuilder buildContent(String sender, List<String> recipient, String subject, String body) {
         StringBuilder content = new StringBuilder();
         content.append("From: ").append(sender).append("\r\n");
@@ -166,13 +189,12 @@ public class SmtpClient {
 
                 sendRequest("MAIL FROM: <" + g.getSender() + ">");
 
-                readRequest();
+                readRequest(); //250 Accepted
 
                 for (String r : g.getRecipients()) {
                     sendRequest("RCPT TO: <" + r + ">");
+                    readRequest(); //250 Accepted
                 }
-
-                readRequest();
 
                 sendRequest("DATA");
 
@@ -181,7 +203,7 @@ public class SmtpClient {
 
                 LOG.info("Client: DATA SENT");
 
-                //TODO: check if the message is sent
+                readEndData(); //250 Message queued
             }
         } finally {
             closeConnection();
