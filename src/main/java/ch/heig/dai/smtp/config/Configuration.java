@@ -18,7 +18,9 @@ public class Configuration {
         if(numberOfGroups < 1){
             throw new IllegalArgumentException("Number of groups inferior to 1");
         }
-
+        if(!verifyServerInfo(serverAddress, serverPort)){
+            throw new IllegalArgumentException("Server info incorrect");
+        }
         this.messagesList = readMessages(messages);
         this.group = formGroup(victims, numberOfGroups);
         this.serverAddress = serverAddress;
