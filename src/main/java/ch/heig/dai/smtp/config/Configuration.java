@@ -19,7 +19,7 @@ import java.util.*;
  * to them the message which will be sent and verify server information
  * </p>
  */
-public class Configuration {
+public class Configuration extends EmailValidation {
     List<Group> group;
     List<Message> messagesList;
     final String serverAddress;

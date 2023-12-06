@@ -172,9 +172,9 @@ public class SmtpClient {
      * @param text The string to encode.
      * @return The encoded string.
      */
-    public String encodeBase64(String text) {
+    private String encodeBase64(String text) {
         return Base64.getEncoder().encodeToString(text.getBytes(CHARSET));
-    }
+    }   
 
     /**
      * Sends emails using SMTP to the specified groups.
