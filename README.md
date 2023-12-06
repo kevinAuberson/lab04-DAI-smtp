@@ -27,11 +27,48 @@ docker run -d -p 1080:1080 -p 1025:1025 maildev/maildev
 
 ## Client SMTP
 ### Description
-Le client SMTP permet d'envoyer 
+Le client SMTP permet d'envoyer des "Pranks" à plusieurs adresses mails en lui fournissant une liste d'adresse mail et des messages à envoyer.
 ### Configuration
+Il faut tout d'abord cloner le repository sur votre machine.
+<br/>Ensuite créer le fichier jar en utilisant la commande maven ci-dessous
+```bash
+mvn clean package
+```
+Le fichier jar est utilisable ainsi en fournissant les arguments requis en ligne de commande.
+Les fichiers requis pour utiliser ce programme sont une liste d'adresse mail et une liste de messages.<br/>
+Ces fichiers doivent être au format utf8, txt, utf16be ou utf16le. <br/>
+Dans le fichier qui contient les adresses mails il faut séparer chacun d'entre eux avec une virgule. <br/>
+Par exemple : 
+```bash
+test@gmail.com, test2@gmail.com
+```
+Dans le fichier des messages chacun d'entre eux doit être séparé séparé avec "---".</br>
+Le contenu doit être spécifié à l'aide des mot-clés "Subject: " et "Body: " <br/>
+Par exemple : 
+```bash
+Subject: Chasse
+Body: Bonjour je souhaite chasser
+---
+Subject: Espionnage
+Body: Bonjour je suis un espion
+```
 ### Utilisation
+Pour utiliser le client SMTP il faut exécuter le fichier jar en ligne de commande en passant en argument la liste des victims, la liste des messages à envoyer et le nombre de groupe de victim qui correspond au nombre d'envoie de mail.
+Il est également possible d'indiquer l'adresse IP du serveur qu'on veut utiliser ainsi que le  numéro de port en les passants en 4ème et 5ème argument.
+<br/><br/>
+Exemple d'utilisation :
+```bash
+java -jar SMTP-1.0.jar victims.txt messages.txt 4
+```
+Cette commande permet d'utiliser les fichiers victims pour configurer les groupes, attribuer un message qui sera envoyer dans chaque groupe avec un maximum de 4 groupes sur le serveur localhost avec le port 1025.
+<br/><br/>
+```bash
+java -jar SMTP-1.0.jar victims.txt messages.txt 4 192.168.1.2 5000
+```
+Cette commande fait la même chose que la commadne précédente mais en utilisant le serveur avec l'adresse IP 192.168.1.2 et le port numéro 5000.
 ### Implémentation
 ### Diagramme de classe
+![img.png](img.png)
 ### Exemple de dialogue
 
 
