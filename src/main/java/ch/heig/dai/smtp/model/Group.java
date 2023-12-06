@@ -1,12 +1,14 @@
 package ch.heig.dai.smtp.model;
 
+import java.util.List;
+
 public class Group {
     private String sender;
-    private String[] recipients;
+    private List<String> recipients;
 
     private Message message;
 
-    public Group(String sender, String[] recipients){
+    public Group(String sender, List<String> recipients){
         this.sender = sender;
         this.recipients = recipients;
     }
@@ -25,7 +27,7 @@ public class Group {
      *
      * @return The recipients of the group.
      */
-    public String[] getRecipients(){
+    public List<String> getRecipients(){
         return this.recipients;
     }
 
